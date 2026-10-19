@@ -23,6 +23,7 @@ spring:
     locations: classpath:db/migration
     schemas: scheduling,authentication,public
     default-schema: public
+    create-schemas: false
 
   session:
     store-type: jdbc
