@@ -10,16 +10,23 @@ spring:
   jpa:
     hibernate:
       ddl-auto: validate
+    properties:
+      hibernate:
+        default_schema: scheduling
     open-in-view: false
 
   flyway:
     enabled: true
     locations: classpath:db/migration
+    schemas: scheduling,authentication,public
+    default-schema: public
 
   session:
     store-type: jdbc
     jdbc:
       initialize-schema: never
+      table-name: authentication.spring_session
+    timeout: 60m
 
 server:
   port: ${SERVER_PORT:8080}
