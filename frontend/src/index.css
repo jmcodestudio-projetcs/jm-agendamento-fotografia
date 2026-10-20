@@ -1,111 +1,63 @@
-:root {
-  --text: #6b6375;
-  --text-h: #08060d;
-  --bg: #fff;
-  --border: #e5e4e7;
-  --code-bg: #f4f3ec;
-  --accent: #aa3bff;
-  --accent-bg: rgba(170, 59, 255, 0.1);
-  --accent-border: rgba(170, 59, 255, 0.5);
-  --social-bg: rgba(244, 243, 236, 0.5);
-  --shadow:
-    rgba(0, 0, 0, 0.1) 0 10px 15px -3px, rgba(0, 0, 0, 0.05) 0 4px 6px -2px;
+@import "tailwindcss";
 
-  --sans: system-ui, 'Segoe UI', Roboto, sans-serif;
-  --heading: system-ui, 'Segoe UI', Roboto, sans-serif;
-  --mono: ui-monospace, Consolas, monospace;
+@theme {
+  /* Paleta — ver claude/fase-1.1-cadastro-fotografo.md (seção de design) */
+  --color-paper: #efede6;        /* fundo, tom de papel/contact sheet */
+  --color-surface: #fbfaf6;      /* painel/formulário, um tom acima do fundo */
+  --color-ink: #1b1d22;          /* texto principal, quase-preto azulado */
+  --color-ink-soft: #55565c;     /* texto secundário */
+  --color-line: #d8d3c7;         /* hairlines, bordas */
+  --color-accent: #c98a3b;       /* dourado "golden hour" — CTA principal */
+  --color-accent-ink: #1b1d22;   /* texto sobre o accent */
+  --color-focus: #4c7a5e;        /* verde "foco confirmado" — só sucesso */
+  --color-danger: #a23b2e;       /* erro — terracota escurecido, não decorativo */
 
-  font: 18px/145% var(--sans);
-  letter-spacing: 0.18px;
-  color-scheme: light dark;
-  color: var(--text);
-  background: var(--bg);
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  --font-display: "Fraunces", serif;
+  --font-sans: "Public Sans", system-ui, sans-serif;
 
-  @media (max-width: 1024px) {
-    font-size: 16px;
+  --radius-panel: 10px;
+}
+
+@layer base {
+  * {
+    border-color: var(--color-line);
+  }
+
+  html {
+    color-scheme: light;
+  }
+
+  body {
+    margin: 0;
+    background: var(--color-paper);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* Anel de foco padrao do navegador e generico; usamos os brackets de AF
+     (ver AFFrame em components/ui/af-frame.tsx) nos elementos interativos
+     principais. Em elementos sem bracket dedicado, mantem um fallback
+     discreto para nao quebrar acessibilidade de teclado. */
+  :focus-visible {
+    outline: 2px solid var(--color-focus);
+    outline-offset: 2px;
   }
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --text: #9ca3af;
-    --text-h: #f3f4f6;
-    --bg: #16171d;
-    --border: #2e303a;
-    --code-bg: #1f2028;
-    --accent: #c084fc;
-    --accent-bg: rgba(192, 132, 252, 0.15);
-    --accent-border: rgba(192, 132, 252, 0.5);
-    --social-bg: rgba(47, 48, 58, 0.5);
-    --shadow:
-      rgba(0, 0, 0, 0.4) 0 10px 15px -3px, rgba(0, 0, 0, 0.25) 0 4px 6px -2px;
-  }
-
-  #social .button-icon {
-    filter: invert(1) brightness(2);
-  }
+/* AFFrame — moldura de foco em formato de câmera (ver components/ui/af-frame.tsx).
+   Escopo intencionalmente local: só suprime o outline genérico dentro de
+   quem usa essa moldura; em qualquer outro lugar o fallback acessível
+   em :focus-visible (acima) continua valendo. */
+.af-frame:focus-within > .af-frame-input {
+  outline: none;
 }
-
-#root {
-  width: 1126px;
-  max-width: 100%;
-  margin: 0 auto;
-  text-align: center;
-  border-inline: 1px solid var(--border);
-  min-height: 100svh;
-  display: flex;
-  flex-direction: column;
-  box-sizing: border-box;
+.af-frame .af-corner {
+  opacity: 0;
+  transition: opacity 120ms ease, transform 120ms ease;
+  transform: scale(1.06);
 }
-
-body {
-  margin: 0;
-}
-
-h1,
-h2 {
-  font-family: var(--heading);
-  font-weight: 500;
-  color: var(--text-h);
-}
-
-h1 {
-  font-size: 56px;
-  letter-spacing: -1.68px;
-  margin: 32px 0;
-  @media (max-width: 1024px) {
-    font-size: 36px;
-    margin: 20px 0;
-  }
-}
-h2 {
-  font-size: 24px;
-  line-height: 118%;
-  letter-spacing: -0.24px;
-  margin: 0 0 8px;
-  @media (max-width: 1024px) {
-    font-size: 20px;
-  }
-}
-p {
-  margin: 0;
-}
-
-code,
-.counter {
-  font-family: var(--mono);
-  display: inline-flex;
-  border-radius: 4px;
-  color: var(--text-h);
-}
-
-code {
-  font-size: 15px;
-  line-height: 135%;
-  padding: 4px 8px;
-  background: var(--code-bg);
+.af-frame:focus-within .af-corner {
+  opacity: 1;
+  transform: scale(1);
 }
