@@ -25,7 +25,11 @@ async function readMessage(response: Response): Promise<string | null> {
   }
 }
 
-export default function SignupPage() {
+type SignupPageProps = {
+  onSwitchToLogin: () => void
+}
+
+export default function SignupPage({ onSwitchToLogin }: SignupPageProps) {
   const [name, setName] = useState("")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
@@ -82,9 +86,14 @@ export default function SignupPage() {
       <section className="bg-paper px-8 py-10 min-[960px]:px-16 min-[960px]:py-14">
         <div className="w-full max-w-[440px] text-left">
           {success ? (
-            <p role="status" className="font-display text-2xl text-ink">
-              Conta criada. Você já pode entrar.
-            </p>
+            <div className="flex flex-col items-start gap-6">
+              <p role="status" className="font-display text-2xl text-ink">
+                Conta criada. Você já pode entrar.
+              </p>
+              <Button type="button" onClick={onSwitchToLogin}>
+                Entrar
+              </Button>
+            </div>
           ) : (
             <>
               <h2 className="mb-8 font-display text-3xl text-ink">Criar conta</h2>
@@ -176,6 +185,17 @@ export default function SignupPage() {
                   )}
                 </div>
               </form>
+
+              <p className="mt-6 text-sm text-ink-soft">
+                Já tem conta?{" "}
+                <button
+                  type="button"
+                  onClick={onSwitchToLogin}
+                  className="text-ink underline underline-offset-2"
+                >
+                  Entrar
+                </button>
+              </p>
             </>
           )}
         </div>
