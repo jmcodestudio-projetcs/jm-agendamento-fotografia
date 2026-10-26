@@ -27,9 +27,10 @@ async function readMessage(response: Response): Promise<string | null> {
 
 type LoginPageProps = {
   onSwitchToSignup: () => void
+  onForgotPassword: () => void
 }
 
-export default function LoginPage({ onSwitchToSignup }: LoginPageProps) {
+export default function LoginPage({ onSwitchToSignup, onForgotPassword }: LoginPageProps) {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [submitting, setSubmitting] = useState(false)
@@ -173,6 +174,16 @@ export default function LoginPage({ onSwitchToSignup }: LoginPageProps) {
               </form>
 
               <p className="mt-6 text-sm text-ink-soft">
+                <button
+                  type="button"
+                  onClick={onForgotPassword}
+                  className="text-ink underline underline-offset-2"
+                >
+                  Esqueci minha senha?
+                </button>
+              </p>
+
+              <p className="mt-3 text-sm text-ink-soft">
                 Ainda não tem conta?{" "}
                 <button
                   type="button"

@@ -56,9 +56,14 @@
             <artifactId>spring-boot-starter-security</artifactId>
         </dependency>
 
+        <!-- No Spring Boot 4.1 o auto-config de sessao virou modular: a lib
+             spring-session-jdbc isolada nao basta, precisa do starter, que
+             traz o modulo de auto-configuracao (spring-boot-session /
+             spring-boot-session-jdbc). Ver
+             https://docs.spring.io/spring-boot/4.1/reference/web/spring-session.html -->
         <dependency>
-            <groupId>org.springframework.session</groupId>
-            <artifactId>spring-session-jdbc</artifactId>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-session-jdbc</artifactId>
         </dependency>
 
         <dependency>

@@ -37,13 +37,17 @@ public class SecurityConfig {
                 .addFilterBefore(new AbsoluteSessionTimeoutFilter(platformSettingsService),
                         AuthorizationFilter.class)
                 .cors(Customizer.withDefaults())
-                // Só o cadastro é isento de CSRF; o login exige o token (decisão 3 da fase 1.2).
+                // Cadastro e reset de senha (anônimos, sem sessão a proteger) são isentos de CSRF;
+                // o login exige o token (decisão 3 da fase 1.2; decisão 7 da fase 1.3).
                 // CsrfTokenRequestAttributeHandler com atributo null desliga o token diferido,
                 // então o cookie XSRF-TOKEN é gravado já no GET /api/public/csrf-token.
                 .csrf(csrf -> {
                     CsrfTokenRequestAttributeHandler csrfHandler = new CsrfTokenRequestAttributeHandler();
                     csrfHandler.setCsrfRequestAttributeName(null);
-                    csrf.ignoringRequestMatchers("/api/public/photographers/signup")
+                    csrf.ignoringRequestMatchers(
+                                    "/api/public/photographers/signup",
+                                    "/api/public/photographers/password-reset/request",
+                                    "/api/public/photographers/password-reset/confirm")
                             .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
                             .csrfTokenRequestHandler(csrfHandler);
                 })
@@ -53,6 +57,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.GET, "/api/public/csrf-token").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/public/photographers/login").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/public/photographers/password-reset/**").permitAll()
                         .requestMatchers("/api/public/**").permitAll()
                         // Sem isto, uma falha interna (500) num endpoint publico aparece
                         // para o cliente como 401, porque o forward para /error tambem
