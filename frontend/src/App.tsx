@@ -2,10 +2,11 @@ import { useState } from "react"
 
 import ForgotPasswordPage from "@/pages/ForgotPasswordPage"
 import LoginPage from "@/pages/LoginPage"
+import ProfilePage from "@/pages/ProfilePage"
 import ResetPasswordPage from "@/pages/ResetPasswordPage"
 import SignupPage from "@/pages/SignupPage"
 
-type Mode = "login" | "signup" | "forgot" | "reset"
+type Mode = "login" | "signup" | "forgot" | "reset" | "profile"
 
 function readTokenFromUrl(): string | null {
   return new URLSearchParams(window.location.search).get("token")
@@ -27,11 +28,14 @@ function App() {
       return <ForgotPasswordPage onBackToLogin={() => setMode("login")} />
     case "reset":
       return <ResetPasswordPage token={token ?? ""} onDone={finishReset} />
+    case "profile":
+      return <ProfilePage onBack={() => setMode("login")} />
     default:
       return (
         <LoginPage
           onSwitchToSignup={() => setMode("signup")}
           onForgotPassword={() => setMode("forgot")}
+          onOpenProfile={() => setMode("profile")}
         />
       )
   }

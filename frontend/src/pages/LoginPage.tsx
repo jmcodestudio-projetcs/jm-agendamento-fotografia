@@ -28,9 +28,14 @@ async function readMessage(response: Response): Promise<string | null> {
 type LoginPageProps = {
   onSwitchToSignup: () => void
   onForgotPassword: () => void
+  onOpenProfile: () => void
 }
 
-export default function LoginPage({ onSwitchToSignup, onForgotPassword }: LoginPageProps) {
+export default function LoginPage({
+  onSwitchToSignup,
+  onForgotPassword,
+  onOpenProfile,
+}: LoginPageProps) {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [submitting, setSubmitting] = useState(false)
@@ -116,9 +121,14 @@ export default function LoginPage({ onSwitchToSignup, onForgotPassword }: LoginP
               <p role="status" className="font-display text-2xl text-ink">
                 Login feito, {loggedInName}.
               </p>
-              <Button type="button" variant="secondary" onClick={handleLogout} disabled={submitting}>
-                {submitting ? "Saindo…" : "Sair"}
-              </Button>
+              <div className="flex items-center gap-3">
+                <Button type="button" variant="secondary" onClick={onOpenProfile} disabled={submitting}>
+                  Editar perfil
+                </Button>
+                <Button type="button" variant="secondary" onClick={handleLogout} disabled={submitting}>
+                  {submitting ? "Saindo…" : "Sair"}
+                </Button>
+              </div>
               {formError && (
                 <p role="alert" className="text-sm text-danger">
                   {formError}
