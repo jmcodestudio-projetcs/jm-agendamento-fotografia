@@ -30,6 +30,8 @@ import org.testcontainers.containers.PostgreSQLContainer;
 
 import com.jmcodestudio.agendamento.config.TenantDataSourceConfig;
 import com.jmcodestudio.agendamento.profile.exception.InvalidWhatsappException;
+import com.jmcodestudio.agendamento.profile.exception.SlugInvalidoException;
+import com.jmcodestudio.agendamento.profile.exception.SlugJaEmUsoException;
 import com.jmcodestudio.agendamento.signup.exception.TimezoneInvalidaException;
 
 @SpringJUnitConfig
@@ -224,6 +226,64 @@ class PhotographerProfileServiceIT {
         assertEquals("(31) 93333-4444", untouched.get("whatsapp"));
         assertEquals("5531933334444", untouched.get("whatsapp_normalized"));
         assertEquals("America/Manaus", untouched.get("timezone"));
+    }
+
+    private String slugOf(UUID id) {
+        return admin.queryForObject(
+                "SELECT public_slug FROM scheduling.photographers WHERE id = ?", String.class, id);
+    }
+
+    @Test
+    void updatePublicSlugWithValidFreeSlugStoresIt() {
+        service.updatePublicSlug(photographerA, new SlugUpdateRequest("ana-fotografia"));
+
+        assertEquals("ana-fotografia", slugOf(photographerA));
+        assertEquals("ana-fotografia", service.getProfile(photographerA).publicSlug());
+    }
+
+    @Test
+    void updatePublicSlugNormalizesCaseAndSurroundingSpaces() {
+        service.updatePublicSlug(photographerA, new SlugUpdateRequest(" MeuSlug-Novo "));
+
+        assertEquals("meuslug-novo", slugOf(photographerA));
+    }
+
+    @Test
+    void updatePublicSlugWithInvalidFormatThrowsAndLeavesSlugUnchanged() {
+        String original = slugOf(photographerA);
+
+        for (String invalid : new String[] { "ab", "meu_slug", "-comeca-com-hifen", "termina-com-hifen-",
+                "hifen--duplo", "a".repeat(101) }) {
+            assertThrows(SlugInvalidoException.class,
+                    () -> service.updatePublicSlug(photographerA, new SlugUpdateRequest(invalid)),
+                    invalid);
+            assertEquals(original, slugOf(photographerA), invalid);
+        }
+    }
+
+    @Test
+    void updatePublicSlugUsedByAnotherPhotographerThrowsAndLeavesBothSlugsUnchanged() {
+        String slugA = slugOf(photographerA);
+        String slugB = slugOf(photographerB);
+
+        assertThrows(SlugJaEmUsoException.class,
+                () -> service.updatePublicSlug(photographerA, new SlugUpdateRequest(slugB)));
+
+        assertEquals(slugA, slugOf(photographerA));
+        assertEquals(slugB, slugOf(photographerB));
+    }
+
+    @Test
+    void tenantContextOfOnePhotographerCannotUpdateAnothersSlug() {
+        TransactionTemplate tx = new TransactionTemplate(tenantTransactionManager);
+        String slugB = slugOf(photographerB);
+
+        tx.executeWithoutResult(status -> {
+            repository.setTenantContext(photographerA);
+            repository.updateSlug(photographerB, "slug-invasor");
+        });
+
+        assertEquals(slugB, slugOf(photographerB));
     }
 
     @Test

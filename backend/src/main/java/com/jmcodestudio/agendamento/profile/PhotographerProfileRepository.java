@@ -36,7 +36,7 @@ public class PhotographerProfileRepository {
         try {
             // Keep the explicit ID predicate as defense in depth in addition to RLS.
             return Optional.ofNullable(jdbcTemplate.queryForObject("""
-                    SELECT name, email, whatsapp, timezone
+                    SELECT name, email, whatsapp, timezone, public_slug
                     FROM scheduling.photographers
                     WHERE id = ?
                     """,
@@ -44,7 +44,8 @@ public class PhotographerProfileRepository {
                             rs.getString("name"),
                             rs.getString("email"),
                             rs.getString("whatsapp"),
-                            rs.getString("timezone")),
+                            rs.getString("timezone"),
+                            rs.getString("public_slug")),
                     photographerId));
         } catch (EmptyResultDataAccessException e) {
             return Optional.empty();
@@ -64,6 +65,13 @@ public class PhotographerProfileRepository {
                 whatsapp,
                 whatsappNormalized,
                 timezone,
+                photographerId);
+    }
+
+    public void updateSlug(UUID photographerId, String slug) {
+        jdbcTemplate.update(
+                "UPDATE scheduling.photographers SET public_slug = ? WHERE id = ?",
+                slug,
                 photographerId);
     }
 }

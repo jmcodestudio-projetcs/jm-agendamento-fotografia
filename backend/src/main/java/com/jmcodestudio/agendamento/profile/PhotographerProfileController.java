@@ -35,4 +35,13 @@ public class PhotographerProfileController {
         profileService.updateProfile(photographerId, request);
         return ResponseEntity.noContent().build();
     }
+
+    @PutMapping("/slug")
+    public ResponseEntity<Void> updateSlug(
+            @Valid @RequestBody SlugUpdateRequest request,
+            Authentication authentication) {
+        UUID photographerId = UUID.fromString(authentication.getName());
+        profileService.updatePublicSlug(photographerId, request);
+        return ResponseEntity.noContent().build();
+    }
 }

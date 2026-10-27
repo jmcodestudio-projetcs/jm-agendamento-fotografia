@@ -24,6 +24,16 @@ public class ProfileExceptionHandler {
         return body(HttpStatus.BAD_REQUEST, "TIMEZONE_INVALIDO", e.getMessage());
     }
 
+    @ExceptionHandler(SlugInvalidoException.class)
+    public ResponseEntity<Map<String, String>> handleSlugInvalido(SlugInvalidoException e) {
+        return body(HttpStatus.BAD_REQUEST, "SLUG_INVALIDO", e.getMessage());
+    }
+
+    @ExceptionHandler(SlugJaEmUsoException.class)
+    public ResponseEntity<Map<String, String>> handleSlugJaEmUso(SlugJaEmUsoException e) {
+        return body(HttpStatus.CONFLICT, "SLUG_JA_EM_USO", e.getMessage());
+    }
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<Map<String, String>> handleValidation(MethodArgumentNotValidException e) {
         String message = e.getBindingResult().getFieldErrors().stream()
