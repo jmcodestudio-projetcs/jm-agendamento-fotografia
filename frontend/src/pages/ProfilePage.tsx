@@ -41,6 +41,11 @@ export default function ProfilePage({ onBack }: ProfilePageProps) {
   const [submitting, setSubmitting] = useState(false)
   const [formError, setFormError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
+  const [publicSlug, setPublicSlug] = useState("")
+  const [newSlug, setNewSlug] = useState("")
+  const [slugSubmitting, setSlugSubmitting] = useState(false)
+  const [slugError, setSlugError] = useState<string | null>(null)
+  const [slugSuccess, setSlugSuccess] = useState(false)
 
   useEffect(() => {
     let cancelled = false
@@ -59,6 +64,8 @@ export default function ProfilePage({ onBack }: ProfilePageProps) {
           setName(body.name ?? "")
           setWhatsapp(body.whatsapp ?? "")
           setTimezone(body.timezone ?? "")
+          setPublicSlug(body.publicSlug ?? "")
+          setNewSlug(body.publicSlug ?? "")
         } else {
           setFormError((await readMessage(response)) ?? LOAD_ERROR)
         }
@@ -103,6 +110,40 @@ export default function ProfilePage({ onBack }: ProfilePageProps) {
       setFormError(NETWORK_ERROR)
     } finally {
       setSubmitting(false)
+    }
+  }
+
+  async function handleSlugSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    setSlugSubmitting(true)
+    setSlugError(null)
+    setSlugSuccess(false)
+
+    try {
+      const response = await fetch(`${API}/api/photographers/me/slug`, {
+        method: "PUT",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+          "X-XSRF-TOKEN": readCookie("XSRF-TOKEN"),
+        },
+        body: JSON.stringify({ slug: newSlug }),
+      })
+
+      if (response.status === 204) {
+        const saved = newSlug.trim().toLowerCase()
+        setPublicSlug(saved)
+        setNewSlug(saved)
+        setSlugSuccess(true)
+      } else if (response.status === 401) {
+        setSessionExpired(true)
+      } else {
+        setSlugError((await readMessage(response)) ?? GENERIC_ERROR)
+      }
+    } catch {
+      setSlugError(NETWORK_ERROR)
+    } finally {
+      setSlugSubmitting(false)
     }
   }
 
@@ -202,6 +243,51 @@ export default function ProfilePage({ onBack }: ProfilePageProps) {
                 {formError && (
                   <p id="form-error" role="alert" className="text-sm text-danger">
                     {formError}
+                  </p>
+                )}
+              </div>
+            </form>
+
+            <form onSubmit={handleSlugSubmit} className="mt-10 flex flex-col gap-6">
+              <div className="flex flex-col gap-2">
+                <h2 className="font-display text-2xl text-ink">Endereço público</h2>
+                <p className="text-sm text-ink-soft">
+                  Seu link: produto.com.br/{publicSlug}
+                </p>
+              </div>
+
+              <div className="flex flex-col gap-2">
+                <Label htmlFor="profile-slug">Novo endereço</Label>
+                <AFFrame>
+                  <Input
+                    id="profile-slug"
+                    type="text"
+                    className="af-frame-input"
+                    required
+                    maxLength={100}
+                    autoComplete="off"
+                    value={newSlug}
+                    onChange={(e) => setNewSlug(e.target.value)}
+                    aria-describedby={slugError ? "slug-error" : "slug-hint"}
+                  />
+                </AFFrame>
+                <p id="slug-hint" className="text-xs text-ink-soft">
+                  Trocar o endereço invalida o link anterior.
+                </p>
+              </div>
+
+              <div className="flex flex-col gap-3">
+                <Button type="submit" disabled={slugSubmitting}>
+                  {slugSubmitting ? "Salvando…" : "Salvar endereço"}
+                </Button>
+                {slugSuccess && (
+                  <p role="status" className="text-sm text-ink">
+                    Endereço atualizado.
+                  </p>
+                )}
+                {slugError && (
+                  <p id="slug-error" role="alert" className="text-sm text-danger">
+                    {slugError}
                   </p>
                 )}
               </div>
