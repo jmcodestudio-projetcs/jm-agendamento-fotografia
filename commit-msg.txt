@@ -1,0 +1,19 @@
+﻿feat(profile): personalizacao de slug da pagina publica (Fase 1.5)
+
+Reusa a infraestrutura tenant-scoped criada na 1.4 (jm_tenant/RLS via
+app.photographer_id), sem nenhuma migration nova. Validacao de formato
+estrita (regex, 3-100 chars, sem transformacao silenciosa) e tratamento
+de conflito de unicidade via DataIntegrityViolationException (sem
+pre-check, evitando race condition).
+
+- PhotographerProfile/ProfileResponse ganham o campo publicSlug
+- Novo endpoint PUT /api/photographers/me/slug
+- SlugInvalidoException (400) e SlugJaEmUsoException (409)
+- ProfilePage.tsx: secao independente para troca de endereco publico
+- PhotographerProfileServiceIT: +5 cenarios (13 testes no total)
+
+Suite completa: 31 testes, 0 falhas. Testado manualmente na tela
+(troca de endereco e confirmacao de que o link antigo quebra).
+
+Co-Authored-By: Claude Sonnet 5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_01UDGq2rNvtpKVQSzQVkvHTC
