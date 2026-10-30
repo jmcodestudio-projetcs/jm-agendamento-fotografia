@@ -30,9 +30,10 @@ async function readMessage(response: Response): Promise<string | null> {
 type ProfilePageProps = {
   onBack: () => void
   onOpenServices: () => void
+  onOpenAgenda: () => void
 }
 
-export default function ProfilePage({ onBack, onOpenServices }: ProfilePageProps) {
+export default function ProfilePage({ onBack, onOpenServices, onOpenAgenda }: ProfilePageProps) {
   const [loading, setLoading] = useState(true)
   const [sessionExpired, setSessionExpired] = useState(false)
   const [email, setEmail] = useState("")
@@ -301,6 +302,13 @@ export default function ProfilePage({ onBack, onOpenServices }: ProfilePageProps
                 className="text-ink underline underline-offset-2"
               >
                 Meus serviços
+              </button>
+              <button
+                type="button"
+                onClick={onOpenAgenda}
+                className="text-ink underline underline-offset-2"
+              >
+                Configurar agenda
               </button>
               <button
                 type="button"

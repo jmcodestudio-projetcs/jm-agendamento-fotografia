@@ -1,5 +1,6 @@
 import { useState } from "react"
 
+import AgendaPage from "@/pages/AgendaPage"
 import ForgotPasswordPage from "@/pages/ForgotPasswordPage"
 import LoginPage from "@/pages/LoginPage"
 import ProfilePage from "@/pages/ProfilePage"
@@ -7,7 +8,7 @@ import ResetPasswordPage from "@/pages/ResetPasswordPage"
 import ServicesPage from "@/pages/ServicesPage"
 import SignupPage from "@/pages/SignupPage"
 
-type Mode = "login" | "signup" | "forgot" | "reset" | "profile" | "services"
+type Mode = "login" | "signup" | "forgot" | "reset" | "profile" | "services" | "agenda"
 
 function readTokenFromUrl(): string | null {
   return new URLSearchParams(window.location.search).get("token")
@@ -34,10 +35,13 @@ function App() {
         <ProfilePage
           onBack={() => setMode("login")}
           onOpenServices={() => setMode("services")}
+          onOpenAgenda={() => setMode("agenda")}
         />
       )
     case "services":
       return <ServicesPage onBack={() => setMode("profile")} />
+    case "agenda":
+      return <AgendaPage onBack={() => setMode("profile")} />
     default:
       return (
         <LoginPage
