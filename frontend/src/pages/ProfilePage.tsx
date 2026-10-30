@@ -29,9 +29,10 @@ async function readMessage(response: Response): Promise<string | null> {
 
 type ProfilePageProps = {
   onBack: () => void
+  onOpenServices: () => void
 }
 
-export default function ProfilePage({ onBack }: ProfilePageProps) {
+export default function ProfilePage({ onBack, onOpenServices }: ProfilePageProps) {
   const [loading, setLoading] = useState(true)
   const [sessionExpired, setSessionExpired] = useState(false)
   const [email, setEmail] = useState("")
@@ -293,7 +294,14 @@ export default function ProfilePage({ onBack }: ProfilePageProps) {
               </div>
             </form>
 
-            <p className="mt-6 text-sm text-ink-soft">
+            <p className="mt-6 flex gap-6 text-sm text-ink-soft">
+              <button
+                type="button"
+                onClick={onOpenServices}
+                className="text-ink underline underline-offset-2"
+              >
+                Meus serviços
+              </button>
               <button
                 type="button"
                 onClick={onBack}

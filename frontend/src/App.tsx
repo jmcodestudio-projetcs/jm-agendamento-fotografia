@@ -4,9 +4,10 @@ import ForgotPasswordPage from "@/pages/ForgotPasswordPage"
 import LoginPage from "@/pages/LoginPage"
 import ProfilePage from "@/pages/ProfilePage"
 import ResetPasswordPage from "@/pages/ResetPasswordPage"
+import ServicesPage from "@/pages/ServicesPage"
 import SignupPage from "@/pages/SignupPage"
 
-type Mode = "login" | "signup" | "forgot" | "reset" | "profile"
+type Mode = "login" | "signup" | "forgot" | "reset" | "profile" | "services"
 
 function readTokenFromUrl(): string | null {
   return new URLSearchParams(window.location.search).get("token")
@@ -29,7 +30,14 @@ function App() {
     case "reset":
       return <ResetPasswordPage token={token ?? ""} onDone={finishReset} />
     case "profile":
-      return <ProfilePage onBack={() => setMode("login")} />
+      return (
+        <ProfilePage
+          onBack={() => setMode("login")}
+          onOpenServices={() => setMode("services")}
+        />
+      )
+    case "services":
+      return <ServicesPage onBack={() => setMode("profile")} />
     default:
       return (
         <LoginPage
