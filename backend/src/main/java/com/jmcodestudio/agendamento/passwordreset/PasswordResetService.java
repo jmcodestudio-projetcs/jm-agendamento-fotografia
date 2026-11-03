@@ -16,7 +16,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.jmcodestudio.agendamento.login.AccessAttemptHmac;
 import com.jmcodestudio.agendamento.passwordreset.exception.InvalidOrExpiredResetTokenException;
+import com.jmcodestudio.agendamento.signup.CommonPasswordChecker;
 import com.jmcodestudio.agendamento.signup.PlatformSettingsService;
+import com.jmcodestudio.agendamento.signup.exception.InvalidPasswordException;
 
 @Service
 public class PasswordResetService {
@@ -34,6 +36,7 @@ public class PasswordResetService {
     private final AuthMessageEncryption authMessageEncryption;
     private final PasswordEncoder passwordEncoder;
     private final PlatformSettingsService platformSettingsService;
+    private final CommonPasswordChecker commonPasswordChecker;
     private final SessionInvalidationService sessionInvalidationService;
     private final String frontendBaseUrl;
     private final SecureRandom secureRandom = new SecureRandom();
@@ -47,6 +50,7 @@ public class PasswordResetService {
             AuthMessageEncryption authMessageEncryption,
             PasswordEncoder passwordEncoder,
             PlatformSettingsService platformSettingsService,
+            CommonPasswordChecker commonPasswordChecker,
             SessionInvalidationService sessionInvalidationService,
             @Value("${FRONTEND_BASE_URL}") String frontendBaseUrl) {
         this.credentialRepository = credentialRepository;
@@ -57,6 +61,7 @@ public class PasswordResetService {
         this.authMessageEncryption = authMessageEncryption;
         this.passwordEncoder = passwordEncoder;
         this.platformSettingsService = platformSettingsService;
+        this.commonPasswordChecker = commonPasswordChecker;
         this.sessionInvalidationService = sessionInvalidationService;
         this.frontendBaseUrl = frontendBaseUrl;
     }
@@ -114,6 +119,11 @@ public class PasswordResetService {
         ActiveResetToken token = tokenRepository.findActiveByTokenHash(sha256(tokenBytes))
                 .orElseThrow(InvalidOrExpiredResetTokenException::new);
 
+        // Mesmas regras de senha do cadastro (achado A-4 da auditoria de 30/10/2026):
+        // valida ANTES de consumir o token, para uma senha fraca não queimar o
+        // link de uso único -- a fotógrafa pode tentar de novo com o mesmo link.
+        validateNewPassword(newPassword);
+
         if (!tokenRepository.consume(token.id())) {
             throw new InvalidOrExpiredResetTokenException();
         }
@@ -121,6 +131,19 @@ public class PasswordResetService {
         credentialRepository.updatePasswordHash(token.photographerUserId(), passwordEncoder.encode(newPassword));
         tokenRepository.revokeOtherActiveTokens(token.photographerUserId(), token.id());
         sessionInvalidationService.invalidateAllSessionsFor(token.photographerId());
+    }
+
+    private void validateNewPassword(String newPassword) {
+        int min = platformSettingsService.getIntSetting("password_min_chars");
+        int max = platformSettingsService.getIntSetting("password_max_chars");
+        int length = newPassword.length();
+        if (length < min || length > max) {
+            throw new InvalidPasswordException(
+                    "a senha deve ter entre " + min + " e " + max + " caracteres");
+        }
+        if (commonPasswordChecker.isCommon(newPassword)) {
+            throw new InvalidPasswordException("senha muito comum, escolha outra");
+        }
     }
 
     private static byte[] sha256(byte[] data) {

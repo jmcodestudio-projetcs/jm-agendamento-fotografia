@@ -42,7 +42,9 @@ import com.jmcodestudio.agendamento.config.PasswordResetDataSourceConfig;
 import com.jmcodestudio.agendamento.config.SignupDataSourceConfig;
 import com.jmcodestudio.agendamento.login.AccessAttemptHmac;
 import com.jmcodestudio.agendamento.passwordreset.exception.InvalidOrExpiredResetTokenException;
+import com.jmcodestudio.agendamento.signup.CommonPasswordChecker;
 import com.jmcodestudio.agendamento.signup.PlatformSettingsService;
+import com.jmcodestudio.agendamento.signup.exception.InvalidPasswordException;
 
 @SpringJUnitConfig
 class PasswordResetServiceIT {
@@ -107,6 +109,7 @@ class PasswordResetServiceIT {
     @EnableTransactionManagement
     @Import({ SignupDataSourceConfig.class, PasswordResetDataSourceConfig.class,
             PasswordEncoderConfig.class, PlatformSettingsService.class,
+            CommonPasswordChecker.class,
             PasswordResetCredentialRepository.class, PasswordResetTokenRepository.class,
             PasswordResetAttemptRepository.class, PasswordResetMessageWriter.class,
             AccessAttemptHmac.class, AuthMessageEncryption.class,
@@ -305,4 +308,32 @@ class PasswordResetServiceIT {
         assertNull(tokenColumn(usedId, "revoked_at"));
         assertNotNull(tokenColumn(otherId, "revoked_at"));
     }
+
+    // Achado A-4 da auditoria de 30/10/2026: o reset aceitava senha mais fraca do
+    // que o cadastro permitiria. Estes dois testes cobrem as mesmas regras do
+    // cadastro (tamanho de platform_settings e lista de senhas comuns) sendo
+    // aplicadas aqui, e confirmam que o token NÃO é consumido quando a senha é
+    // rejeitada (a fotógrafa pode tentar de novo com o mesmo link).
+    @Test
+    void confirmResetWithPasswordShorterThanMinimumThrowsAndDoesNotConsumeToken() throws Exception {
+        int min = settings.getIntSetting("password_min_chars");
+        String tooShort = "a".repeat(min - 1);
+        byte[] raw = newRawToken();
+        UUID tokenId = insertActiveToken(raw);
+
+        assertThrows(InvalidPasswordException.class, () -> service.confirmReset(encode(raw), tooShort));
+
+        assertNull(tokenColumn(tokenId, "consumed_at"));
+        assertDoesNotThrow(() -> service.confirmReset(encode(raw), NEW_PASSWORD));
+        assertNotNull(tokenColumn(tokenId, "consumed_at"));
+    }
+
+    // Não escrevi um teste de ponta a ponta para "senha comum" aqui: toda entrada
+    // de signup/common-passwords.txt tem no máximo 14 caracteres, e
+    // password_min_chars é 15 — então, com a configuração atual, o teste de
+    // tamanho acima já dispara antes do CommonPasswordChecker ser alcançado por
+    // qualquer senha da lista. O componente em si (reaproveitado do cadastro,
+    // mesmo CommonPasswordChecker) ganhou cobertura própria nesta sessão --
+    // não tinha nenhuma em lugar algum do projeto até agora -- em
+    // CommonPasswordCheckerTest.
 }

@@ -63,8 +63,7 @@ public class SecurityConfig {
                         // para o cliente como 401, porque o forward para /error tambem
                         // cai em "anyRequest().authenticated()". Ver claude/erros-conhecidos.md #3.
                         .requestMatchers("/error").permitAll()
-                        .anyRequest().authenticated())
-                .httpBasic(Customizer.withDefaults());
+                        .anyRequest().authenticated());
         return http.build();
     }
 

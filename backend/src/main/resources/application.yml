@@ -34,6 +34,13 @@ spring:
 
 server:
   port: ${SERVER_PORT:8080}
+  # Faz o Spring confiar em X-Forwarded-For/Forwarded para request.getRemoteAddr()
+  # (rate limit por IP em login e password-reset). So e seguro porque em producao
+  # o reverse proxy (nginx/Cloudflare/etc.) SOBRESCREVE esse header com o IP real
+  # do cliente antes de repassar - nunca encaminha um valor que o proprio cliente
+  # possa ter enviado. Sem proxy confiavel na frente (dev local), o header
+  # simplesmente nao vem e o comportamento e o mesmo de antes (IP da conexao TCP).
+  forward-headers-strategy: framework
 
 management:
   endpoints:

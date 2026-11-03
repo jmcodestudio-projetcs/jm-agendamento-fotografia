@@ -30,6 +30,11 @@ public class AuthenticationMessageRepository {
      * @Transactional): sem ela, o FOR UPDATE SKIP LOCKED libera as linhas assim que o
      * SELECT termina e dois workers poderiam reivindicar as mesmas mensagens.
      * workerInstanceId deve ser um UUID, pois lock_owner é uuid.
+     *
+     * <p>Também reivindica mensagens que ficaram travadas em PROCESSING além do
+     * lease (locked_until no passado) — cobre o worker cair ou o app reiniciar
+     * entre o claim e o markSent/markFailed*, cenário em que a mensagem ficava
+     * presa em PROCESSING para sempre (achado A-3 da auditoria de 30/10/2026).
      */
     public List<ClaimedMessage> claimBatch(String workerInstanceId, int batchSize, int leaseSeconds) {
         UUID lockOwner = UUID.fromString(workerInstanceId);
@@ -37,7 +42,8 @@ public class AuthenticationMessageRepository {
         List<ClaimedMessage> messages = jdbcTemplate.query("""
                 SELECT id, recipient, payload_ciphertext, encryption_key_id, expires_at, attempt_count
                 FROM scheduling.authentication_messages
-                WHERE status = 'PENDING' AND available_at <= now()
+                WHERE available_at <= now()
+                  AND (status = 'PENDING' OR (status = 'PROCESSING' AND locked_until < now()))
                 ORDER BY available_at
                 LIMIT ?
                 FOR UPDATE SKIP LOCKED
